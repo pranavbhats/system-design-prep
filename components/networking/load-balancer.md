@@ -79,7 +79,7 @@ graph TD
 
 ### 🔹 Example Scenario
 
-**User wants to access www.example.com**
+**User wants to access <www.example.com>**
 
 1. DNS resolves to load balancer IP: 203.0.113.10
 2. Load balancer receives request
@@ -559,9 +559,9 @@ graph TD
 
 ## 📚 Additional Resources
 
-- NGINX Documentation: https://nginx.org/en/docs/
-- HAProxy Docs: http://www.haproxy.org/
-- AWS Load Balancer Types: https://aws.amazon.com/elasticloadbalancing/
-- System Design Primer (Load Balancing): https://github.com/donnemartin/system-design-primer#load-balancer
+- NGINX Documentation: <https://nginx.org/en/docs/>
+- HAProxy Docs: <http://www.haproxy.org/>
+- AWS Load Balancer Types: <https://aws.amazon.com/elasticloadbalancing/>
+- System Design Primer (Load Balancing): <https://github.com/donnemartin/system-design-primer#load-balancer>
 
 ---
