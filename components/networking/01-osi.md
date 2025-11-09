@@ -39,12 +39,12 @@
 
 ```mermaid
 graph TB
-	A[Application\nLayer 7] --> B[Presentation\nLayer 6]
-	B --> C[Session\nLayer 5]
-	C --> D[Transport\nLayer 4]
-	D --> E[Network\nLayer 3]
-	E --> F[Data Link\nLayer 2]
-	F --> G[Physical\nLayer 1]
+	A[Application Layer 7] --> B[Presentation Layer 6]
+	B --> C[Session Layer 5]
+	C --> D[Transport Layer 4]
+	D --> E[Network Layer 3]
+	E --> F[Data Link Layer 2]
+	F --> G[Physical Layer 1]
 
 	classDef layer fill:#e3f2fd,stroke:#1976d2,stroke-width:1px
 	class A,B,C,D,E,F,G layer
