@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import React from "react";
+import React, { useMemo, memo } from "react";
 
 const LayoutContainer = styled.div`
     display: flex;
@@ -64,37 +64,57 @@ type SplitScreenProps = {
     children: React.ReactNode;
 };
 
-const LeftSidebar = ({ width, children }: LeftSidebarProps) => (
+const LeftSidebar = memo(({ width, children }: LeftSidebarProps) => (
     <LeftSidebarContainer width={width}>{children}</LeftSidebarContainer>
-);
+));
 
-const RightSidebar = ({ width, children }: RightSidebarProps) => (
+LeftSidebar.displayName = 'SplitScreen.LeftSidebar';
+
+const RightSidebar = memo(({ width, children }: RightSidebarProps) => (
     <RightSidebarContainer width={width}>{children}</RightSidebarContainer>
-);
+));
 
-const BottomPanel = ({ height, children }: BottomPanelProps) => (
+RightSidebar.displayName = 'SplitScreen.RightSidebar';
+
+const BottomPanel = memo(({ height, children }: BottomPanelProps) => (
     <BottomPanelContainer height={height}>{children}</BottomPanelContainer>
-);
+));
 
-const MainContent = ({ children }: MainContentProps) => (
+BottomPanel.displayName = 'SplitScreen.BottomPanel';
+
+const MainContent = memo(({ children }: MainContentProps) => (
     <MainContentContainer>{children}</MainContentContainer>
-);
+));
 
-export const SplitScreen = ({ children }: SplitScreenProps) => {
-    const childrenArray = React.Children.toArray(children);
+MainContent.displayName = 'SplitScreen.MainContent';
 
-    const leftSidebar = childrenArray.find(
-        (child) => React.isValidElement(child) && child.type === LeftSidebar
-    );
-    const rightSidebar = childrenArray.find(
-        (child) => React.isValidElement(child) && child.type === RightSidebar
-    );
-    const bottomPanel = childrenArray.find(
-        (child) => React.isValidElement(child) && child.type === BottomPanel
-    );
-    const mainContent = childrenArray.find(
-        (child) => React.isValidElement(child) && child.type === MainContent
-    );
+type SplitScreenComponent = React.FC<SplitScreenProps> & {
+    LeftSidebar: typeof LeftSidebar;
+    RightSidebar: typeof RightSidebar;
+    BottomPanel: typeof BottomPanel;
+    MainContent: typeof MainContent;
+};
+
+const SplitScreenRoot: React.FC<SplitScreenProps> = ({ children }) => {
+    // Memoize child filtering to avoid unnecessary re-computation
+    const { leftSidebar, rightSidebar, bottomPanel, mainContent } = useMemo(() => {
+        const childrenArray = React.Children.toArray(children);
+
+        return {
+            leftSidebar: childrenArray.find(
+                (child) => React.isValidElement(child) && child.type === LeftSidebar
+            ),
+            rightSidebar: childrenArray.find(
+                (child) => React.isValidElement(child) && child.type === RightSidebar
+            ),
+            bottomPanel: childrenArray.find(
+                (child) => React.isValidElement(child) && child.type === BottomPanel
+            ),
+            mainContent: childrenArray.find(
+                (child) => React.isValidElement(child) && child.type === MainContent
+            ),
+        };
+    }, [children]);
 
     return (
         <LayoutContainer>
@@ -107,6 +127,10 @@ export const SplitScreen = ({ children }: SplitScreenProps) => {
         </LayoutContainer>
     );
 };
+
+SplitScreenRoot.displayName = 'SplitScreen';
+
+export const SplitScreen = SplitScreenRoot as SplitScreenComponent;
 
 SplitScreen.LeftSidebar = LeftSidebar;
 SplitScreen.RightSidebar = RightSidebar;
