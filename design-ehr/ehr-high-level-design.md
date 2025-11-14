@@ -447,6 +447,8 @@ flowchart LR
   - Per-tenant rate limiting, quotas, and throttling behavior.
   - Backoff strategies and API lifecycle/versioning policies.
 
+
 - **Legal/compliance mapping**
   - Mapping of controls to HIPAA/GDPR and regional regulations.
   - BAAs, Data Processing Agreements, breach notification and reporting timelines.
+
