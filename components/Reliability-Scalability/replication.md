@@ -86,15 +86,41 @@ graph TB
 
 ### Replication vs Backup
 
-| Aspect | Replication | Backup |
-|--------|-------------|--------|
-| **Purpose** | High availability, performance | Disaster recovery |
-| **Frequency** | Continuous, real-time | Periodic (hourly, daily) |
-| **Access** | Always online, queryable | Offline, restore needed |
-| **Latency** | Milliseconds to seconds | Hours to days |
-| **Use Case** | Failover, read scaling | Data loss recovery |
-| **Cost** | Higher (always running) | Lower (storage only) |
-| **Recovery Time** | Seconds | Minutes to hours |
+```mermaid
+flowchart LR
+    A[Data Protection Strategies]
+
+    A --> R[Replication]
+    A --> B[Backup]
+
+    %% Replication details
+    R --> R1["High availability & performance"]
+    R --> R2["Continuous / Real-time"]
+    R --> R3["Always online & queryable"]
+    R --> R4["Latency: ms → seconds"]
+    R --> R5["Use case: Failover, Read scaling"]
+    R --> R6["Cost: Higher"]
+    R --> R7["Recovery: Seconds"]
+
+    %% Backup details
+    B --> B1["Disaster recovery"]
+    B --> B2["Periodic (hourly / daily)"]
+    B --> B3["Offline, restore required"]
+    B --> B4["Latency: hours → days"]
+    B --> B5["Use case: Data loss recovery"]
+    B --> B6["Cost: Lower"]
+    B --> B7["Recovery: Minutes → hours"]
+
+    %% Styles
+    classDef replication fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px,color:#0D47A1
+    classDef backup fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef header fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px,color:#E65100
+
+    class A header
+    class R,R1,R2,R3,R4,R5,R6,R7 replication
+    class B,B1,B2,B3,B4,B5,B6,B7 backup
+
+```
 
 ---
 
@@ -105,13 +131,47 @@ graph TB
 **Description:** Write operation completes only after data is written to primary AND all replicas.
 
 **How it works:**
-```
-1. Client sends write to primary
-2. Primary writes to its storage
-3. Primary sends data to all replicas
-4. Replicas write to their storage
-5. Replicas acknowledge to primary
-6. Primary acknowledges to client
+```mermaid
+flowchart LR
+    %% Swimlanes
+    subgraph L1[🧑‍💻 Client]
+        direction TB
+        C1["Send write request"]
+        C2["Receive acknowledgement"]
+    end
+
+    subgraph L2[🟦 Primary Database]
+        direction TB
+        P1["Write to primary storage"]
+        P2["Replicate data to replicas"]
+        P3["Acknowledge client"]
+    end
+
+    subgraph L3[🟩 Replica Nodes]
+        direction TB
+        R1["Receive replicated data"]
+        R2["Write to replica storage"]
+        R3["Send acknowledgement to primary"]
+    end
+
+    %% Flow connections
+    C1 --> P1
+    P1 --> P2
+    P2 --> R1
+    R1 --> R2
+    R2 --> R3
+    R3 --> P3
+    P3 --> C2
+
+    %% Styling
+    classDef client fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef primary fill:#BBDEFB,stroke:#0D47A1,stroke-width:2px,color:#0D47A1
+    classDef replica fill:#C8E6C9,stroke:#1B5E20,stroke-width:2px,color:#1B5E20
+
+    class C1,C2 client
+    class P1,P2,P3 primary
+    class R1,R2,R3 replica
+
 ```
 
 **Characteristics:**
@@ -139,12 +199,55 @@ graph TB
 **Description:** Write operation completes after data is written to primary only; replicas updated later.
 
 **How it works:**
-```
-1. Client sends write to primary
-2. Primary writes to its storage
-3. Primary acknowledges to client immediately
-4. Primary sends data to replicas asynchronously
-5. Replicas write when they receive data
+```mermaid
+flowchart LR
+    %% Swimlanes
+    subgraph L1[🧑‍💻 Client]
+        direction TB
+        C1["Send write"]
+        C2["✔ Write ACKed"]
+    end
+
+    subgraph L2[🟦 Primary Database]
+        direction TB
+        P1["Write to primary storage"]
+        P2["Immediate ACK to client"]
+        P3["Async send to replicas"]
+    end
+
+    subgraph L3[🟩 Replica Nodes]
+        direction TB
+        R1["Replica receives data"]
+        R2["Replica writes to storage"]
+    end
+
+    %% Main sync path
+    C1 --> P1
+    P1 --> P2
+    P2 --> C2
+
+    %% Async replication
+    P1 -.->|Async| P3
+    P3 -.-> R1
+    R1 --> R2
+
+    %% Lag window annotation
+    Lag["⏳ Replica Lag Window<br/>Data exists only on Primary"]
+    P2 -.-> Lag
+    Lag -.-> R1
+
+    %% Styling
+    classDef client fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef primary fill:#BBDEFB,stroke:#0D47A1,stroke-width:2px,color:#0D47A1
+    classDef replica fill:#C8E6C9,stroke:#1B5E20,stroke-width:2px,color:#1B5E20
+    classDef lag fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px,color:#E65100,stroke-dasharray: 5 5
+
+    class C1,C2 client
+    class P1,P2,P3 primary
+    class R1,R2 replica
+    class Lag lag
+
+
 ```
 
 **Characteristics:**
@@ -172,13 +275,58 @@ graph TB
 **Description:** Write completes after data is written to primary and at least ONE replica.
 
 **How it works:**
-```
-1. Client sends write to primary
-2. Primary writes to its storage
-3. Primary sends data to all replicas
-4. Wait for at least 1 replica to acknowledge
-5. Primary acknowledges to client
-6. Other replicas updated asynchronously
+```mermaid
+flowchart LR
+    %% Swimlanes
+    subgraph L1[🧑‍💻 Client]
+        direction TB
+        C1["Send write"]
+        C2["✔ Write acknowledged"]
+    end
+
+    subgraph L2[🟦 Primary Database]
+        direction TB
+        P1["Write to primary storage"]
+        P2["Send data to all replicas"]
+        P3["Wait for ≥ 1 replica ACK"]
+        P4["Acknowledge client"]
+    end
+
+    subgraph L3[🟩 Replica Nodes]
+        direction TB
+        R1["Replica 1<br/>Write & ACK"]
+        R2["Replica 2<br/>Async write"]
+        R3["Replica N<br/>Async write"]
+    end
+
+    %% Main flow
+    C1 --> P1
+    P1 --> P2
+
+    %% Replica fan-out
+    P2 --> R1
+    P2 -.-> R2
+    P2 -.-> R3
+
+    %% Blocking ACK path
+    R1 --> P3
+    P3 --> P4
+    P4 --> C2
+
+    %% Async updates
+    P4 -.->|Background| R2
+    P4 -.->|Background| R3
+
+    %% Styling
+    classDef client fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef primary fill:#BBDEFB,stroke:#0D47A1,stroke-width:2px,color:#0D47A1
+    classDef replica fill:#C8E6C9,stroke:#1B5E20,stroke-width:2px,color:#1B5E20
+    classDef async stroke-dasharray: 5 5
+
+    class C1,C2 client
+    class P1,P2,P3,P4 primary
+    class R1,R2,R3 replica
+
 ```
 
 **Characteristics:**
